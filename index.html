@@ -18,111 +18,112 @@
       text-align: center;
       padding-top: 20px;
       margin-bottom: 5px;
+      color: #2c3e50;
     }
     #chart-container {
       display: flex;
       justify-content: center;
       align-items: center;
       margin: 20px auto;
-      width: 90%;
-      max-width: 800px;
+      width: 95%;
+      max-width: 900px;
       height: auto;
       aspect-ratio: 1 / 1;
       position: relative;
     }
     svg {
       background: #fff;
-      border-radius: 8px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      border-radius: 12px;
+      box-shadow: 0 5px 10px rgba(0,0,0,0.1);
       width: 100%;
       height: 100%;
     }
     .tooltip {
       position: absolute;
       text-align: center;
-      padding: 10px;
+      padding: 12px;
       font-size: 14px;
-      background: rgba(0,0,0,0.9);
+      background: rgba(0,0,0,0.95);
       color: #fff;
-      border-radius: 6px;
+      border-radius: 8px;
       pointer-events: none;
       opacity: 0;
       z-index: 10;
       transition: opacity 0.3s ease;
       font-family: sans-serif;
+      letter-spacing: 0.5px;
     }
     text {
       font-size: 12px;
-      fill: #333;
+      fill: #444;
       pointer-events: none;
       user-select: none;
     }
     .axis-label {
       font-weight: bold;
-      fill: #2c3e50;
+      color: #2c3e50;
       font-size: 14px;
+      font-family: sans-serif;
+      letter-spacing: 0.8px;
+    }
+    rect {
+      transition: fill 0.3s ease, stroke 0.3s ease;
     }
     rect:hover {
       stroke: #3498db;
-      stroke-width: 2px;
-      cursor: pointer;
-      fill-opacity: 0.9;
+      stroke-width: 3px;
+      fill-opacity: 0.8;
     }
     #controls {
       display: flex;
       flex-wrap: wrap;
       justify-content: center;
-      margin-bottom: 20px;
-      gap: 15px;
+      margin-bottom: 25px;
+      gap: 20px;
     }
-    #controls button {
-      padding: 12px 18px;
-      font-size: 14px;
+    #controls button, #controls select {
+      padding: 14px 20px;
+      font-size: 16px;
       border: none;
-      border-radius: 8px;
+      border-radius: 10px;
       background-color: #fff;
       color: #2c3e50;
       cursor: pointer;
-      transition: background-color 0.3s ease, transform 0.2s ease;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+      box-shadow: 0 3px 7px rgba(0,0,0,0.15);
       font-family: sans-serif;
+      letter-spacing: 0.5px;
+      outline: none;
     }
     #controls button:hover {
-      background-color: #ecf0f1;
-      transform: translateY(-2px);
+      background-color: #e0e0e0;
+      transform: translateY(-3px);
+      box-shadow: 0 4px 9px rgba(0,0,0,0.1);
     }
     #controls button:active {
-      background-color: #bdc3c7;
+      background-color: #ccc;
       transform: translateY(0);
-      box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
     }
     #controls select {
-      padding: 10px 15px;
-      font-size: 14px;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      background-color: #fff;
-      color: #2c3e50;
-      font-family: sans-serif;
       appearance: none;
       background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 4 5'%3E%3Cpath fill='%23333' fill-rule='nonzero' d='M2 0L0 2h4z'/%3E%3C/svg%3E");
       background-repeat: no-repeat;
-      background-position: right 10px center;
-      background-size: 10px 12px;
+      background-position: right 15px center;
+      background-size: 12px 14px;
       transition: border-color 0.2s ease, box-shadow 0.2s ease;
-      box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.25);
     }
     #controls select:focus {
       outline: none;
       border-color: #3498db;
-      box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.25);
+      box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
     }
   </style>
 </head>
 <body>
-  <h1>Correlation Matrix of Selected Numerical Features</h1>
+  <h1>Interactive Correlation Matrix</h1>
   <div id="controls">
-    <button id="recalculate">Recalculate Correlation</button>
+    <button id="recalculate">Calculate</button>
     <select id="colorScaleSelect">
       <option value="interpolateRdBu">Red-Blue</option>
       <option value="interpolatePlasma">Plasma</option>
@@ -139,9 +140,9 @@
     const excludeCols = ["Month", "Latitude", "Longitude", "Altitude (m)"];
     
     // Dimensions and margins
-    const margin = { top: 150, right: 200, bottom: 150, left: 100 };
-    const width = 700;
-    const height = 700;
+    const margin = { top: 120, right: 220, bottom: 120, left: 120 };
+    const width = 800;
+    const height = 800;
     
     // Create the SVG and group container
     const svg = d3.select("#chart-container")
@@ -239,7 +240,7 @@
         .attr("fill", d => colorScale(d.value))
         .attr("stroke", "#eee")
         .on("mouseover", function(event, d) {
-          d3.select(this).attr("stroke", "#333");
+          d3.select(this).attr("stroke", "#3498db");
           tooltip.transition().duration(200).style("opacity", 0.9);
           tooltip.html(`<strong>${d.x}</strong> vs <strong>${d.y}</strong><br/>Correlation: ${d.value.toFixed(2)}`)
                  .style("left", (event.pageX + 10) + "px")
@@ -273,8 +274,8 @@
         g.selectAll(".xLabel").remove();
         g.selectAll(".yLabel").remove();
 
-        const labelPadding = 15;
-        const labelRotation = -45;
+        const labelPadding = 10;
+        const labelRotation = -45 - 180 - 45;
 
         // X-axis labels
         g.selectAll(".xLabel")
@@ -286,10 +287,7 @@
             .attr("y", 0)
             .style("text-anchor", "end")
             .style("font-size", "12px")
-            .attr("transform", function(d) {
-                const x = xScale(d) + xScale.bandwidth() / 2;
-                return `translate(0, -${labelPadding + 5}) rotate(${labelRotation}, ${x}, 0)`; // Increased padding
-            })
+            .attr("transform", d => `translate(0, -${labelPadding + 10}) rotate(${labelRotation}, ${xScale(d) + xScale.bandwidth() / 2}, 0)`)
             .text(d => d);
 
         // Y-axis labels
@@ -309,8 +307,8 @@
     // Draw the legend with an updated gradient
     function drawLegend() {
       const legendHeight = 200,
-            legendWidth = 10,
-            legendX = width + 80,
+            legendWidth = 12,
+            legendX = width + 90,
             legendY = (height - legendHeight) / 2;
       
       // Create or update the gradient definition
@@ -345,7 +343,9 @@
         .range([legendHeight, 0]);
       
       const legendAxis = d3.axisRight(legendScale)
-        .ticks(5);
+        .ticks(5)
+        .tickSize(0)
+        .tickPadding(10);
       
       let legend = svg.select("g.legend");
       if (legend.empty()) {
@@ -363,8 +363,10 @@
         .style("fill", "url(#corr-gradient)");
       
       legend.append("g")
-        .attr("transform", `translate(${legendWidth}, 0)`)
-        .call(legendAxis);
+        .attr("transform", `translate(${legendWidth + 10}, 0)`)
+        .call(legendAxis)
+        .selectAll("text")
+        .style("font-size", "12px");
     }
     
     // Main update function: load data and update the chart
