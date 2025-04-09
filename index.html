@@ -89,8 +89,7 @@
       background-color: #fff;
       color: #2c3e50;
       cursor: pointer;
-      transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
-      box-shadow: 0 3px 7px rgba(0,0,0,0.15);
+      transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0 3px 7px rgba(0,0,0,0.15);
       font-family: sans-serif;
       letter-spacing: 0.5px;
       outline: none;
@@ -306,67 +305,67 @@
     
     // Draw the legend with an updated gradient
     function drawLegend() {
-      const legendHeight = 200,
-            legendWidth = 12,
-            legendX = width + 90,
-            legendY = (height - legendHeight) / 2;
-      
-      // Create or update the gradient definition
-      let defs = svg.select("defs");
-      if (defs.empty()) {
-        defs = svg.append("defs");
-      }
-      let gradient = defs.select("#corr-gradient");
-      if (gradient.empty()) {
-        gradient = defs.append("linearGradient")
-          .attr("id", "corr-gradient")
-          .attr("x1", "0%")
-          .attr("y1", "0%")
-          .attr("x2", "0%")
-          .attr("y2", "100%");
-      } else {
-        gradient.selectAll("stop").remove();
-      }
-      gradient.append("stop")
-        .attr("offset", "0%")
-        .attr("stop-color", colorScale(-1));
-      gradient.append("stop")
-        .attr("offset", "50%")
-        .attr("stop-color", colorScale(0));
-      gradient.append("stop")
-        .attr("offset", "100%")
-        .attr("stop-color", colorScale(1));
-      
-      // Legend axis
-      const legendScale = d3.scaleLinear()
-        .domain([-1, 1])
-        .range([legendHeight, 0]);
-      
-      const legendAxis = d3.axisRight(legendScale)
-        .ticks(5)
-        .tickSize(0)
-        .tickPadding(10);
-      
-      let legend = svg.select("g.legend");
-      if (legend.empty()) {
-        legend = svg.append("g")
-          .attr("class", "legend")
-          .attr("transform", `translate(${margin.left + legendX}, ${margin.top + legendY})`);
-      }
-      
-      legend.selectAll("rect").remove();
-      legend.selectAll("g").remove();
-      
-      legend.append("rect")
-        .attr("width", legendWidth)
-        .attr("height", legendHeight)
-        .style("fill", "url(#corr-gradient)");
-      
-      legend.append("g")
-        .attr("transform", `translate(${legendWidth + 10}, 0)`)
-        .call(legendAxis)
-        .selectAll("text")
-        .style("font-size", "12px");
+        const legendHeight = 200;
+        const legendWidth = 12;
+        const legendX = width + 90;
+        const legendY = (height - legendHeight) / 2;
+
+        // Create or update the gradient definition
+        let defs = svg.select("defs");
+        if (defs.empty()) {
+            defs = svg.append("defs");
+        }
+        let gradient = defs.select("#corr-gradient");
+        if (gradient.empty()) {
+            gradient = defs.append("linearGradient")
+                .attr("id", "corr-gradient")
+                .attr("x1", "0%")
+                .attr("y1", "0%")
+                .attr("x2", "0%")
+                .attr("y2", "100%");
+        } else {
+            gradient.selectAll("stop").remove();
+        }
+        gradient.append("stop")
+            .attr("offset", "0%")
+            .attr("stop-color", colorScale(1));
+        gradient.append("stop")
+            .attr("offset", "50%")
+            .attr("stop-color", colorScale(0));
+        gradient.append("stop")
+            .attr("offset", "100%")
+            .attr("stop-color", colorScale(-1));
+
+        // Legend axis
+        const legendScale = d3.scaleLinear()
+            .domain([-1, 1])
+            .range([legendHeight, 0]);
+
+        const legendAxis = d3.axisRight(legendScale)
+            .ticks(5)
+            .tickSize(0)
+            .tickPadding(10);
+
+        let legend = svg.select("g.legend");
+        if (legend.empty()) {
+            legend = svg.append("g")
+                .attr("class", "legend")
+                .attr("transform", `translate(${margin.left + legendX}, ${margin.top + legendY})`);
+        }
+
+        legend.selectAll("rect").remove();
+        legend.selectAll("g").remove();
+
+        legend.append("rect")
+            .attr("width", legendWidth)
+            .attr("height", legendHeight)
+            .style("fill", "url(#corr-gradient)");
+
+        legend.append("g")
+            .attr("transform", `translate(${legendWidth + 10}, 0)`)
+            .call(legendAxis)
+            .selectAll("text")
+            .style("font-size", "12px");
     }
     
     // Main update function: load data and update the chart
