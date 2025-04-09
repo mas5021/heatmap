@@ -134,12 +134,12 @@
     const csvUrl = "https://gist.githubusercontent.com/mystrycodes/dc37c95ed9bfae8f17cf7a9343174118/raw/390386e2a7b4672d9039ae7473055a4f4d321623/ClimateAndCropProductionMergedAndCleaned";
     const excludeCols = ["Month", "Latitude", "Longitude", "Altitude (m)"];
     
-    // Dimensions and margins
-    const width = 700,
-          height = 700,
-          margin = { top: 100, right: 150, bottom: 100, left: 100 };
+    // Dimensions and margins (adjusted to accommodate larger, rotated x-axis labels)
+    const margin = { top: 150, right: 200, bottom: 150, left: 100 },
+          width  = 700,
+          height = 700;
     
-    // Create SVG and group container
+    // Create the SVG and group container
     const svg = d3.select("#chart-container")
       .append("svg")
       .attr("width", width + margin.left + margin.right)
@@ -148,7 +148,7 @@
     const g = svg.append("g")
       .attr("transform", `translate(${margin.left},${margin.top})`);
     
-    // Tooltip for hover information
+    // Tooltip setup
     const tooltip = d3.select("#heatmapTooltip");
     
     // Helper functions
@@ -176,7 +176,7 @@
     let colorScaleFunc = d3.interpolateRdBu;
     let xScale, yScale, colorScale;
     
-    // Create scales for x, y and color
+    // Create scales for axis and colors
     function createScales(data) {
       const sample = data[0];
       numericCols = [];
@@ -199,7 +199,7 @@
         .domain([-1, 1]);
     }
     
-    // Compute and return the correlation matrix data
+    // Build the correlation matrix data
     function createMatrix(data) {
       data.forEach(d => {
         numericCols.forEach(col => {
@@ -219,11 +219,11 @@
     }
     
     // Draw the heatmap cells
-    function drawHeatmap(matrix) {
+    function drawHeatmap(matrixData) {
       const cells = g.selectAll("rect")
-        .data(matrix, d => d.x + "-" + d.y);
+        .data(matrixData, d => d.x + "-" + d.y);
       
-      // Enter new cells
+      // ENTER new cells
       cells.enter()
         .append("rect")
         .attr("x", d => xScale(d.x))
@@ -236,12 +236,12 @@
           d3.select(this).attr("stroke", "#333");
           tooltip.transition().duration(200).style("opacity", 0.9);
           tooltip.html(`<strong>${d.x}</strong> vs <strong>${d.y}</strong><br/>Correlation: ${d.value.toFixed(2)}`)
-            .style("left", (event.pageX + 10) + "px")
-            .style("top", (event.pageY - 28) + "px");
+                 .style("left", (event.pageX + 10) + "px")
+                 .style("top", (event.pageY - 28) + "px");
         })
-        .on("mousemove", function(event) {
+        .on("mousemove", function(event, d) {
           tooltip.style("left", (event.pageX + 10) + "px")
-            .style("top", (event.pageY - 28) + "px");
+                 .style("top", (event.pageY - 28) + "px");
         })
         .on("mouseout", function() {
           d3.select(this).attr("stroke", "#eee");
@@ -251,7 +251,7 @@
         .duration(800)
         .style("opacity", 1);
       
-      // Update existing cells
+      // UPDATE existing cells
       cells.transition()
         .duration(800)
         .attr("x", d => xScale(d.x))
@@ -261,24 +261,33 @@
       cells.exit().remove();
     }
     
-    // Draw (and clear previous) axis labels
+    // Draw axis labels with updated x-axis transformation and adjusted margins for readability
     function drawAxis() {
+      // Clear previous labels
       g.selectAll(".xLabel").remove();
       g.selectAll(".yLabel").remove();
       
-      // X-axis labels
+      // Update x-axis labels using new padding and rotation:
+      const labelPadding = 40; // Increased from 15
+      const labelRotation = -45;
+      
       g.selectAll(".xLabel")
         .data(xScale.domain())
         .enter()
         .append("text")
         .attr("class", "axis-label xLabel")
         .attr("x", d => xScale(d) + xScale.bandwidth() / 2)
-        .attr("y", -5)
-        .attr("transform", d => `translate(${xScale(d) + xScale.bandwidth() / 2}, -5) rotate(-45)`)
-        .style("text-anchor", "middle")
+        .attr("y", -labelPadding / 2) // Adjust vertical position
+        .style("text-anchor", "end")
+        .style("font-size", "10px") // Slightly smaller font
+        .attr("transform", d => `
+            rotate(${labelRotation},
+            ${xScale(d) + xScale.bandwidth() / 2},
+            ${-labelPadding / 2})
+        `)
         .text(d => d);
       
-      // Y-axis labels
+      // Y-axis labels remain the same
       g.selectAll(".yLabel")
         .data(yScale.domain())
         .enter()
@@ -298,7 +307,7 @@
             legendX = width + 80,
             legendY = (height - legendHeight) / 2;
       
-      // Update gradient definition for legend
+      // Create or update the gradient definition
       let defs = svg.select("defs");
       if (defs.empty()) {
         defs = svg.append("defs");
@@ -314,7 +323,6 @@
       } else {
         gradient.selectAll("stop").remove();
       }
-      
       gradient.append("stop")
         .attr("offset", "0%")
         .attr("stop-color", colorScale(-1));
@@ -325,7 +333,7 @@
         .attr("offset", "100%")
         .attr("stop-color", colorScale(1));
       
-      // Legend scale and axis
+      // Legend axis
       const legendScale = d3.scaleLinear()
         .domain([-1, 1])
         .range([legendHeight, 0]);
@@ -341,18 +349,19 @@
       }
       
       legend.selectAll("rect").remove();
+      legend.selectAll("g").remove();
+      
       legend.append("rect")
         .attr("width", legendWidth)
         .attr("height", legendHeight)
         .style("fill", "url(#corr-gradient)");
       
-      legend.selectAll("g").remove();
       legend.append("g")
         .attr("transform", `translate(${legendWidth}, 0)`)
         .call(legendAxis);
     }
     
-    // Main update function to load data and update the chart
+    // Main update function: load data and update the chart
     function updateChart() {
       d3.csv(csvUrl).then(data => {
         createScales(data);
@@ -363,11 +372,9 @@
       });
     }
     
-    // Initial rendering and event listeners
+    // Initial render and event listeners for interactivity
     updateChart();
-    
     d3.select("#recalculate").on("click", updateChart);
-    
     d3.select("#colorScaleSelect").on("change", function() {
       colorScaleFunc = d3[this.value];
       updateChart();
