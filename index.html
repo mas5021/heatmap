@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Correlation Heatmap</title>
+  <script src="https://d3js.org/d3.v6.min.js"></script>
+  <style>
+    body {
+      font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+      background-color: #f3f3f3;
+      margin: 0; 
+      padding: 0;
+    }
+    h1 {
+      text-align: center;
+      padding-top: 20px;
+      margin-bottom: 5px;
+    }
+    #chart {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin: 20px auto;
+      width: 800px;
+      height: 800px;
+      position: relative;
+    }
+    .tooltip {
+      position: absolute;
+      text-align: center;
+      padding: 6px;
+      font-size: 12px;
+      background: rgba(0,0,0,0.75);
+      color: #fff;
+      border-radius: 4px;
+      pointer-events: none;
+      opacity: 0;
+    }
+    text {
+      font-size: 12px;
+      fill: #333;
+    }
+    .axis-label {
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+
+<h1>Correlation Matrix of Selected Numerical Features</h1>
+<div id="chart"></div>
+<div class="tooltip" id="heatmapTooltip"></div>
+
+<script>
+  // Link to your CSV
+  const csvUrl = "https://gist.githubusercontent.com/mystrycodes/dc37c95ed9bfae8f17cf7a9343174118/raw/390386e2a7b4672d9039ae7473055a4f4d321623/ClimateAndCropProductionMergedAndCleaned";
+
+  // Columns to exclude from correlation
+  const excludeCols = ["Month", "Latitude", "Longitude", "Altitude (m)"];
+
+  // Dimensions
+  const width = 700,
+        height = 700,
+        margin = { top: 100, right: 50, bottom: 100, left: 100 };
+
+  // Create SVG
+  const svg = d3.select("#chart")
+    .append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom);
+
+  const g = svg.append("g")
+    .attr("transform", translate(${margin.left},${margin.top}));
+
+  // Tooltip
+  const tooltip = d3.select("#heatmapTooltip");
+
+  // Helper: Check if value is numeric
+  function isNumeric(value) {
+    return !isNaN(parseFloat(value)) && isFinite(value);
+  }
+
+  // Helper: Compute Pearson correlation
+  function pearson(x, y) {
+    const n = x.length;
+    const meanX = d3.mean(x);
+    const meanY = d3.mean(y);
+    let num = 0, denX = 0, denY = 0;
+    for (let i = 0; i < n; i++) {
+      const dx = x[i] - meanX;
+      const dy = y[i] - meanY;
+      num += dx * dy;
+      denX += dx * dx;
+      denY += dy * dy;
+    }
+    return num / Math.sqrt(denX * denY);
+  }
+
+  d3.csv(csvUrl).then(data => {
+    // Identify numeric columns, excluding the ones we don't want
+    const sample = data[0];
+    let numericCols = [];
+    for (let col in sample) {
+      if (excludeCols.includes(col)) continue;
+      if (isNumeric(sample[col])) {
+        numericCols.push(col);
+      }
+    }
+
+    // Convert string values to numbers
+    data.forEach(d => {
+      numericCols.forEach(col => {
+        d[col] = +d[col];
+      });
+    });
+
+    // Build correlation matrix as array of { x, y, value }
+    let matrix = [];
+    numericCols.forEach(row => {
+      numericCols.forEach(col => {
+        const arr1 = data.map(d => d[row]);
+        const arr2 = data.map(d => d[col]);
+        const corrVal = pearson(arr1, arr2);
+        matrix.push({ x: col, y: row, value: corrVal });
+      });
+    });
+
+    // Create scales
+    const xDomain = numericCols.slice();
+    const yDomain = numericCols.slice();
+
+    const xScale = d3.scaleBand()
+      .domain(xDomain)
+      .range([0, width])
+      .padding(0);
+
+    const yScale = d3.scaleBand()
+      .domain(yDomain)
+      .range([0, height])
+      .padding(0);
+
+    const colorScale = d3.scaleSequential(d3.interpolateRdBu)
+      .domain([-1, 1]); // correlation range
+
+    // Draw rectangles
+    g.selectAll("rect")
+      .data(matrix)
+      .enter()
+      .append("rect")
+      .attr("x", d => xScale(d.x))
+      .attr("y", d => yScale(d.y))
+      .attr("width", xScale.bandwidth())
+      .attr("height", yScale.bandwidth())
+      .attr("fill", d => colorScale(d.value))
+      .attr("stroke", "#eee")
+      .on("mouseover", function(event, d) {
+        d3.select(this).attr("stroke", "#333");
+        tooltip.transition().duration(200).style("opacity", 0.9);
+        tooltip.html(<strong>${d.x}</strong> vs <strong>${d.y}</strong><br/>Corr: ${d.value.toFixed(2)})
+          .style("left", (event.pageX + 8) + "px")
+          .style("top", (event.pageY - 28) + "px");
+      })
+      .on("mousemove", function(event, d) {
+        tooltip.style("left", (event.pageX + 8) + "px")
+               .style("top", (event.pageY - 28) + "px");
+      })
+      .on("mouseout", function() {
+        d3.select(this).attr("stroke", "#eee");
+        tooltip.transition().duration(500).style("opacity", 0);
+      })
+      .transition() // fade in effect
+      .duration(800)
+      .style("opacity", 1);
+
+    // Add x-axis labels
+    g.selectAll(".xLabel")
+      .data(xDomain)
+      .enter()
+      .append("text")
+      .attr("class", "axis-label")
+      .attr("x", d => xScale(d) + xScale.bandwidth() / 2)
+      .attr("y", -5)
+      .style("text-anchor", "middle")
+      .style("dominant-baseline", "central")
+      .attr("transform", (d) => {
+        const xPos = xScale(d) + xScale.bandwidth() / 2;
+        return translate(${xPos}, -5) rotate(-45);
+      })
+      .text(d => d);
+
+    // Add y-axis labels
+    g.selectAll(".yLabel")
+      .data(yDomain)
+      .enter()
+      .append("text")
+      .attr("class", "axis-label")
+      .attr("x", -5)
+      .attr("y", d => yScale(d) + yScale.bandwidth() / 2)
+      .attr("text-anchor", "end")
+      .style("dominant-baseline", "middle")
+      .text(d => d);
+
+    // Create color legend axis on the right
+    const legendHeight = 200;
+    const legendWidth = 10;
+    const legendX = width + 30;
+    const legendY = (height - legendHeight) / 2;
+
+    // Legend scale
+    const legendScale = d3.scaleLinear()
+      .domain([-1, 1])
+      .range([legendHeight, 0]);
+
+    const legendAxis = d3.axisRight(legendScale)
+      .ticks(5);
+
+    // Legend group
+    const legend = svg.append("g")
+      .attr("transform", translate(${margin.left + legendX}, ${margin.top + legendY}));
+
+    // Gradient definition
+    const defs = svg.append("defs");
+    const linearGradient = defs.append("linearGradient")
+      .attr("id", "corr-gradient")
+      .attr("x1", "0%").attr("y1", "0%")
+      .attr("x2", "0%").attr("y2", "100%");
+
+    linearGradient.append("stop")
+      .attr("offset", "0%")
+      .attr("stop-color", d3.interpolateRdBu(1));
+
+    linearGradient.append("stop")
+      .attr("offset", "50%")
+      .attr("stop-color", d3.interpolateRdBu(0.5));
+
+    linearGradient.append("stop")
+      .attr("offset", "100%")
+      .attr("stop-color", d3.interpolateRdBu(0));
+
+    legend.append("rect")
+      .attr("width", legendWidth)
+      .attr("height", legendHeight)
+      .style("fill", "url(#corr-gradient)");
+
+    legend.append("g")
+      .attr("transform", translate(${legendWidth},0))
+      .call(legendAxis);
+
+  });
+</script>
+</body>
+</html>
