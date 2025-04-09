@@ -1,372 +1,377 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <title>Interactive Correlation Heatmap</title>
-  <script src="https://d3js.org/d3.v6.min.js"></script>
-  <style>
-    body {
-      font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-      background-color: #f3f3f3;
-      margin: 0;
-      padding: 0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-    h1 {
-      text-align: center;
-      padding-top: 20px;
-      margin-bottom: 5px;
-    }
-    #chart-container {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      margin: 20px auto;
-      width: 800px;
-      height: 800px;
-      position: relative;
-    }
-    svg {
-      background: #fff;
-      border-radius: 8px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    }
-    .tooltip {
-      position: absolute;
-      text-align: center;
-      padding: 10px;
-      font-size: 14px;
-      background: rgba(0,0,0,0.9);
-      color: #fff;
-      border-radius: 6px;
-      pointer-events: none;
-      opacity: 0;
-      z-index: 10;
-      transition: opacity 0.3s ease;
-      font-family: sans-serif;
-    }
-    text {
-      font-size: 12px;
-      fill: #333;
-      pointer-events: none;
-      user-select: none;
-    }
-    .axis-label {
-      font-weight: bold;
-      fill: #2c3e50;
-      font-size: 14px;
-    }
-    rect:hover {
-      stroke: #3498db;
-      stroke-width: 2px;
-      cursor: pointer;
-      fill-opacity: 0.9;
-    }
-    #controls {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      margin-bottom: 20px;
-      gap: 15px;
-    }
-    #controls button {
-      padding: 12px 18px;
-      font-size: 14px;
-      border: none;
-      border-radius: 8px;
-      background-color: #fff;
-      color: #2c3e50;
-      cursor: pointer;
-      transition: background-color 0.3s ease, transform 0.2s ease;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-      font-family: sans-serif;
-    }
-    #controls button:hover {
-      background-color: #ecf0f1;
-      transform: translateY(-2px);
-    }
-    #controls button:active {
-      background-color: #bdc3c7;
-      transform: translateY(0);
-      box-shadow: 0 1px 2px rgba(0,0,0,0.1);
-    }
-    #controls select {
-      padding: 10px 15px;
-      font-size: 14px;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      background-color: #fff;
-      color: #2c3e50;
-      font-family: sans-serif;
-      appearance: none;
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 4 5'%3E%3Cpath fill='%23333' fill-rule='nonzero' d='M2 0L0 2h4z'/%3E%3C/svg%3E");
-      background-repeat: no-repeat;
-      background-position: right 10px center;
-      background-size: 10px 12px;
-      transition: border-color 0.2s ease, box-shadow 0.2s ease;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    }
-    #controls select:focus {
-      outline: none;
-      border-color: #3498db;
-      box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.25);
-    }
-  </style>
+  <meta charset="utf-8">
+  <title>Interactive Correlation Heatmap</title>
+  <script src="https://d3js.org/d3.v6.min.js"></script>
+  <style>
+    body {
+      font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+      background-color: #f3f3f3;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    h1 {
+      text-align: center;
+      padding-top: 20px;
+      margin-bottom: 5px;
+    }
+    #chart-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin: 20px auto;
+      width: 800px;
+      height: 800px;
+      position: relative;
+    }
+    svg {
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    .tooltip {
+      position: absolute;
+      text-align: center;
+      padding: 10px;
+      font-size: 14px;
+      background: rgba(0,0,0,0.9);
+      color: #fff;
+      border-radius: 6px;
+      pointer-events: none;
+      opacity: 0;
+      z-index: 10;
+      transition: opacity 0.3s ease;
+      font-family: sans-serif;
+    }
+    text {
+      font-size: 12px;
+      fill: #333;
+      pointer-events: none;
+      user-select: none;
+    }
+    .axis-label {
+      font-weight: bold;
+      fill: #2c3e50;
+      font-size: 14px;
+    }
+    rect:hover {
+      stroke: #3498db;
+      stroke-width: 2px;
+      cursor: pointer;
+      fill-opacity: 0.9;
+    }
+    #controls {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-bottom: 20px;
+      gap: 15px;
+    }
+    #controls button {
+      padding: 12px 18px;
+      font-size: 14px;
+      border: none;
+      border-radius: 8px;
+      background-color: #fff;
+      color: #2c3e50;
+      cursor: pointer;
+      transition: background-color 0.3s ease, transform 0.2s ease;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      font-family: sans-serif;
+    }
+    #controls button:hover {
+      background-color: #ecf0f1;
+      transform: translateY(-2px);
+    }
+    #controls button:active {
+      background-color: #bdc3c7;
+      transform: translateY(0);
+      box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    }
+    #controls select {
+      padding: 10px 15px;
+      font-size: 14px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      background-color: #fff;
+      color: #2c3e50;
+      font-family: sans-serif;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 4 5'%3E%3Cpath fill='%23333' fill-rule='nonzero' d='M2 0L0 2h4z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 10px center;
+      background-size: 10px 12px;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    #controls select:focus {
+      outline: none;
+      border-color: #3498db;
+      box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.25);
+    }
+  </style>
 </head>
 <body>
-
-<h1>Correlation Matrix of Selected Numerical Features</h1>
-<div id="controls">
-  <button id="recalculate">Recalculate Correlation</button>
-  <select id="colorScaleSelect">
-    <option value="interpolateRdBu">Red-Blue</option>
-    <option value="interpolatePlasma">Plasma</option>
-    <option value="interpolateViridis">Viridis</option>
-    <option value="interpolateCool">Cool</option>
-  </select>
-</div>
-<div id="chart-container"></div>
-<div class="tooltip" id="heatmapTooltip"></div>
-
-<script>
-  // Link to your CSV
-  const csvUrl = "https://gist.githubusercontent.com/mystrycodes/dc37c95ed9bfae8f17cf7a9343174118/raw/390386e2a7b4672d9039ae7473055a4f4d321623/ClimateAndCropProductionMergedAndCleaned";
-
-  // Columns to exclude from correlation
-  const excludeCols = ["Month", "Latitude", "Longitude", "Altitude (m)"];
-
-  // Dimensions
-  const width = 700,
-        height = 700,
-        margin = { top: 100, right: 150, bottom: 100, left: 100 }; // Increased right margin for legend
-
-  // Create SVG
-  const svg = d3.select("#chart-container")
-    .append("svg")
-    .attr("width", width + margin.left + margin.right)
-    .attr("height", height + margin.top + margin.bottom);
-
-  const g = svg.append("g")
-    .attr("transform", `translate(${margin.left},${margin.top})`);
-
-  // Tooltip
-  const tooltip = d3.select("#heatmapTooltip");
-
-  // Helper: Check if value is numeric
-  function isNumeric(value) {
-    return !isNaN(parseFloat(value)) && isFinite(value);
-  }
-
-  // Helper: Compute Pearson correlation
-  function pearson(x, y) {
-    const n = x.length;
-    const meanX = d3.mean(x);
-    const meanY = d3.mean(y);
-    let num = 0, denX = 0, denY = 0;
-    for (let i = 0; i < n; i++) {
-      const dx = x[i] - meanX;
-      const dy = y[i] - meanY;
-      num += dx * dy;
-      denX += dx * dx;
-      denY += dy * dy;
-    }
-    return num / Math.sqrt(denX * denY);
-  }
-
-  let numericCols = [];
-  let matrix = [];
-  let colorScaleFunc = d3.interpolateRdBu;
-  let xScale, yScale, colorScale;
-
-  function createScales(data) {
-    // Identify numeric columns, excluding the ones we don't want
-    const sample = data[0];
-    numericCols = [];
-    for (let col in sample) {
-      if (excludeCols.includes(col)) continue;
-      if (isNumeric(sample[col])) {
-        numericCols.push(col);
-      }
-    }
-
-    // Create scales
-    const xDomain = numericCols.slice();
-    const yDomain = numericCols.slice();
-
-    xScale = d3.scaleBand()
-      .domain(xDomain)
-      .range([0, width])
-      .padding(0);
-
-    yScale = d3.scaleBand()
-      .domain(yDomain)
-      .range([0, height])
-      .padding(0);
-
-    colorScale = d3.scaleSequential(colorScaleFunc)
-      .domain([-1, 1]); // correlation range
-  }
-
-  function createMatrix(data) {
-    // Convert string values to numbers and Build correlation matrix as array of { x, y, value }
-    data.forEach(d => {
-      numericCols.forEach(col => {
-        d[col] = +d[col];
-      });
-    });
-    matrix = [];
-    numericCols.forEach(row => {
-      numericCols.forEach(col => {
-        const arr1 = data.map(d => d[row]);
-        const arr2 = data.map(d => d[col]);
-        const corrVal = pearson(arr1, arr2);
-        matrix.push({ x: col, y: row, value: corrVal });
-      });
-    });
-    return matrix;
-  }
-
-  function drawHeatmap(matrix) {
-    // Draw rectangles
-    const cells = g.selectAll("rect")
-      .data(matrix, d => d.x + "-" + d.y); // Use a unique key
-
-    cells.enter()
-      .append("rect")
-      .attr("x", d => xScale(d.x))
-      .attr("y", d => yScale(d.y))
-      .attr("width", xScale.bandwidth())
-      .attr("height", yScale.bandwidth())
-      .attr("fill", d => colorScale(d.value))
-      .attr("stroke", "#eee")
-      .on("mouseover", function(event, d) {
-        d3.select(this).attr("stroke", "#333");
-        tooltip.transition().duration(200).style("opacity", 0.9);
-        tooltip.html(`<strong>${d.x}</strong> vs <strong>${d.y}</strong><br/>Correlation: ${d.value.toFixed(2)}`)
-          .style("left", (event.pageX + 10) + "px")
-          .style("top", (event.pageY - 28) + "px");
-      })
-      .on("mousemove", function(event, d) {
-        tooltip.style("left", (event.pageX + 10) + "px")
-               .style("top", (event.pageY - 28) + "px");
-      })
-      .on("mouseout", function() {
-        d3.select(this).attr("stroke", "#eee");
-        tooltip.transition().duration(500).style("opacity", 0);
-      })
-      .transition()
-      .duration(800)
-      .style("opacity", 1);
-
-    cells.transition()
-      .duration(800)
-      .attr("x", d => xScale(d.x))
-      .attr("y", d => yScale(d.y))
-      .attr("fill", d => colorScale(d.value));
-
-    cells.exit().remove();
-  }
-
-  function drawAxis(data) {
-    // Add x-axis labels
-    const xLabels = g.selectAll(".xLabel")
-      .data(xScale.domain())
-      .enter()
-      .append("text")
-      .attr("class", "axis-label xLabel")
-      .attr("x", d => xScale(d) + xScale.bandwidth() / 2)
-      .attr("y", -5)
-      .style("text-anchor", "middle")
-      .style("dominant-baseline", "central")
-      .attr("transform", d => `translate(${xScale(d) + xScale.bandwidth() / 2}, -5) rotate(-45)`)
-      .text(d => d);
-
-    xLabels.exit().remove();
-    
-    // Add y-axis labels
-    const yLabels = g.selectAll(".yLabel")
-      .data(yScale.domain())
-      .enter()
-      .append("text")
-      .attr("class", "axis-label yLabel")
-      .attr("x", -5)
-      .attr("y", d => yScale(d) + yScale.bandwidth() / 2)
-      .attr("text-anchor", "end")
-      .style("dominant-baseline", "middle")
-      .text(d => d);
-     
-    yLabels.exit().remove();
-  }
-
-  function drawLegend() {
-    // Create color legend axis on the right
-    const legendHeight = 200;
-    const legendWidth = 10;
-    const legendX = width + 80;
-    const legendY = (height - legendHeight) / 2;
-
-    // Legend scale
-    const legendScale = d3.scaleLinear()
-      .domain([-1, 1])
-      .range([legendHeight, 0]);
-
-    const legendAxis = d3.axisRight(legendScale)
-      .ticks(5);
-
-    // Legend group
-    const legend = svg.selectAll("g.legend").data([0]);
-    legend.enter()
-      .append("g")
-      .attr("class", "legend")
-      .attr("transform", `translate(${margin.left + legendX}, ${margin.top + legendY})`);
-
-    legend.selectAll("rect").data([0])
-      .enter()
-      .append("rect")
-      .attr("width", legendWidth)
-      .attr("height", legendHeight)
-      .style("fill", "url(#corr-gradient)");
-
-    legend.select("g").data([0])
-      .enter()
-      .append("g")
-      .attr("transform", `translate(${legendWidth},0)`)
-      .call(legendAxis);
-  }
-
-  // Initial draw
-  d3.csv(csvUrl).then(data => {
-    createScales(data);
-    const matrixData = createMatrix(data);
-    drawHeatmap(matrixData);
-    drawAxis(data);
-    drawLegend();
-  });
-
-  // Event listener for recalculate button
-  d3.select("#recalculate").on("click", () => {
-    d3.csv(csvUrl).then(data => {
-      createScales(data);
-      const matrixData = createMatrix(data);
-      drawHeatmap(matrixData);
-      drawAxis(data);
-      drawLegend();
-    });
-  });
-
-  // Event listener for color scale dropdown
-  d3.select("#colorScaleSelect").on("change", function() {
-    colorScaleFunc = d3[this.value];
-    d3.csv(csvUrl).then(data => {
-      createScales(data);
-      const matrixData = createMatrix(data);
-      colorScale.domain([-1, 1]).range(colorScaleFunc.range());
-      drawHeatmap(matrixData);
-      drawLegend();
-    });
-  });
-</script>
+  <h1>Correlation Matrix of Selected Numerical Features</h1>
+  <div id="controls">
+    <button id="recalculate">Recalculate Correlation</button>
+    <select id="colorScaleSelect">
+      <option value="interpolateRdBu">Red-Blue</option>
+      <option value="interpolatePlasma">Plasma</option>
+      <option value="interpolateViridis">Viridis</option>
+      <option value="interpolateCool">Cool</option>
+    </select>
+  </div>
+  <div id="chart-container"></div>
+  <div class="tooltip" id="heatmapTooltip"></div>
+  
+  <script>
+    // CSV URL and columns to exclude
+    const csvUrl = "https://gist.githubusercontent.com/mystrycodes/dc37c95ed9bfae8f17cf7a9343174118/raw/390386e2a7b4672d9039ae7473055a4f4d321623/ClimateAndCropProductionMergedAndCleaned";
+    const excludeCols = ["Month", "Latitude", "Longitude", "Altitude (m)"];
+    
+    // Dimensions and margins
+    const width = 700,
+          height = 700,
+          margin = { top: 100, right: 150, bottom: 100, left: 100 };
+    
+    // Create SVG and group container
+    const svg = d3.select("#chart-container")
+      .append("svg")
+      .attr("width", width + margin.left + margin.right)
+      .attr("height", height + margin.top + margin.bottom);
+    
+    const g = svg.append("g")
+      .attr("transform", `translate(${margin.left},${margin.top})`);
+    
+    // Tooltip for hover information
+    const tooltip = d3.select("#heatmapTooltip");
+    
+    // Helper functions
+    function isNumeric(value) {
+      return !isNaN(parseFloat(value)) && isFinite(value);
+    }
+    
+    function pearson(x, y) {
+      const n = x.length;
+      const meanX = d3.mean(x);
+      const meanY = d3.mean(y);
+      let num = 0, denX = 0, denY = 0;
+      for (let i = 0; i < n; i++) {
+        const dx = x[i] - meanX;
+        const dy = y[i] - meanY;
+        num += dx * dy;
+        denX += dx * dx;
+        denY += dy * dy;
+      }
+      return num / Math.sqrt(denX * denY);
+    }
+    
+    let numericCols = [];
+    let matrix = [];
+    let colorScaleFunc = d3.interpolateRdBu;
+    let xScale, yScale, colorScale;
+    
+    // Create scales for x, y and color
+    function createScales(data) {
+      const sample = data[0];
+      numericCols = [];
+      for (let col in sample) {
+        if (excludeCols.includes(col)) continue;
+        if (isNumeric(sample[col])) numericCols.push(col);
+      }
+      
+      xScale = d3.scaleBand()
+        .domain(numericCols)
+        .range([0, width])
+        .padding(0);
+      
+      yScale = d3.scaleBand()
+        .domain(numericCols)
+        .range([0, height])
+        .padding(0);
+      
+      colorScale = d3.scaleSequential(colorScaleFunc)
+        .domain([-1, 1]);
+    }
+    
+    // Compute and return the correlation matrix data
+    function createMatrix(data) {
+      data.forEach(d => {
+        numericCols.forEach(col => {
+          d[col] = +d[col];
+        });
+      });
+      
+      matrix = [];
+      numericCols.forEach(row => {
+        numericCols.forEach(col => {
+          const arr1 = data.map(d => d[row]);
+          const arr2 = data.map(d => d[col]);
+          matrix.push({ x: col, y: row, value: pearson(arr1, arr2) });
+        });
+      });
+      return matrix;
+    }
+    
+    // Draw the heatmap cells
+    function drawHeatmap(matrix) {
+      const cells = g.selectAll("rect")
+        .data(matrix, d => d.x + "-" + d.y);
+      
+      // Enter new cells
+      cells.enter()
+        .append("rect")
+        .attr("x", d => xScale(d.x))
+        .attr("y", d => yScale(d.y))
+        .attr("width", xScale.bandwidth())
+        .attr("height", yScale.bandwidth())
+        .attr("fill", d => colorScale(d.value))
+        .attr("stroke", "#eee")
+        .on("mouseover", function(event, d) {
+          d3.select(this).attr("stroke", "#333");
+          tooltip.transition().duration(200).style("opacity", 0.9);
+          tooltip.html(`<strong>${d.x}</strong> vs <strong>${d.y}</strong><br/>Correlation: ${d.value.toFixed(2)}`)
+            .style("left", (event.pageX + 10) + "px")
+            .style("top", (event.pageY - 28) + "px");
+        })
+        .on("mousemove", function(event) {
+          tooltip.style("left", (event.pageX + 10) + "px")
+            .style("top", (event.pageY - 28) + "px");
+        })
+        .on("mouseout", function() {
+          d3.select(this).attr("stroke", "#eee");
+          tooltip.transition().duration(500).style("opacity", 0);
+        })
+        .transition()
+        .duration(800)
+        .style("opacity", 1);
+      
+      // Update existing cells
+      cells.transition()
+        .duration(800)
+        .attr("x", d => xScale(d.x))
+        .attr("y", d => yScale(d.y))
+        .attr("fill", d => colorScale(d.value));
+      
+      cells.exit().remove();
+    }
+    
+    // Draw (and clear previous) axis labels
+    function drawAxis() {
+      g.selectAll(".xLabel").remove();
+      g.selectAll(".yLabel").remove();
+      
+      // X-axis labels
+      g.selectAll(".xLabel")
+        .data(xScale.domain())
+        .enter()
+        .append("text")
+        .attr("class", "axis-label xLabel")
+        .attr("x", d => xScale(d) + xScale.bandwidth() / 2)
+        .attr("y", -5)
+        .attr("transform", d => `translate(${xScale(d) + xScale.bandwidth() / 2}, -5) rotate(-45)`)
+        .style("text-anchor", "middle")
+        .text(d => d);
+      
+      // Y-axis labels
+      g.selectAll(".yLabel")
+        .data(yScale.domain())
+        .enter()
+        .append("text")
+        .attr("class", "axis-label yLabel")
+        .attr("x", -5)
+        .attr("y", d => yScale(d) + yScale.bandwidth() / 2)
+        .attr("text-anchor", "end")
+        .style("dominant-baseline", "middle")
+        .text(d => d);
+    }
+    
+    // Draw the legend with an updated gradient
+    function drawLegend() {
+      const legendHeight = 200,
+            legendWidth = 10,
+            legendX = width + 80,
+            legendY = (height - legendHeight) / 2;
+      
+      // Update gradient definition for legend
+      let defs = svg.select("defs");
+      if (defs.empty()) {
+        defs = svg.append("defs");
+      }
+      let gradient = defs.select("#corr-gradient");
+      if (gradient.empty()) {
+        gradient = defs.append("linearGradient")
+          .attr("id", "corr-gradient")
+          .attr("x1", "0%")
+          .attr("y1", "0%")
+          .attr("x2", "0%")
+          .attr("y2", "100%");
+      } else {
+        gradient.selectAll("stop").remove();
+      }
+      
+      gradient.append("stop")
+        .attr("offset", "0%")
+        .attr("stop-color", colorScale(-1));
+      gradient.append("stop")
+        .attr("offset", "50%")
+        .attr("stop-color", colorScale(0));
+      gradient.append("stop")
+        .attr("offset", "100%")
+        .attr("stop-color", colorScale(1));
+      
+      // Legend scale and axis
+      const legendScale = d3.scaleLinear()
+        .domain([-1, 1])
+        .range([legendHeight, 0]);
+      
+      const legendAxis = d3.axisRight(legendScale)
+        .ticks(5);
+      
+      let legend = svg.select("g.legend");
+      if (legend.empty()) {
+        legend = svg.append("g")
+          .attr("class", "legend")
+          .attr("transform", `translate(${margin.left + legendX}, ${margin.top + legendY})`);
+      }
+      
+      legend.selectAll("rect").remove();
+      legend.append("rect")
+        .attr("width", legendWidth)
+        .attr("height", legendHeight)
+        .style("fill", "url(#corr-gradient)");
+      
+      legend.selectAll("g").remove();
+      legend.append("g")
+        .attr("transform", `translate(${legendWidth}, 0)`)
+        .call(legendAxis);
+    }
+    
+    // Main update function to load data and update the chart
+    function updateChart() {
+      d3.csv(csvUrl).then(data => {
+        createScales(data);
+        const matrixData = createMatrix(data);
+        drawHeatmap(matrixData);
+        drawAxis();
+        drawLegend();
+      });
+    }
+    
+    // Initial rendering and event listeners
+    updateChart();
+    
+    d3.select("#recalculate").on("click", updateChart);
+    
+    d3.select("#colorScaleSelect").on("change", function() {
+      colorScaleFunc = d3[this.value];
+      updateChart();
+    });
+  </script>
 </body>
 </html>
