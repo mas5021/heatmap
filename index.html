@@ -24,14 +24,18 @@
       justify-content: center;
       align-items: center;
       margin: 20px auto;
-      width: 800px;
-      height: 800px;
+      width: 90%;
+      max-width: 800px;
+      height: auto;
+      aspect-ratio: 1 / 1;
       position: relative;
     }
     svg {
       background: #fff;
       border-radius: 8px;
       box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      width: 100%;
+      height: 100%;
     }
     .tooltip {
       position: absolute;
@@ -106,7 +110,7 @@
       background-position: right 10px center;
       background-size: 10px 12px;
       transition: border-color 0.2s ease, box-shadow 0.2s ease;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.25);
     }
     #controls select:focus {
       outline: none;
@@ -134,16 +138,18 @@
     const csvUrl = "https://gist.githubusercontent.com/mystrycodes/dc37c95ed9bfae8f17cf7a9343174118/raw/390386e2a7b4672d9039ae7473055a4f4d321623/ClimateAndCropProductionMergedAndCleaned";
     const excludeCols = ["Month", "Latitude", "Longitude", "Altitude (m)"];
     
-    // Dimensions and margins (adjusted to accommodate larger, rotated x-axis labels)
-    const margin = { top: 150, right: 200, bottom: 150, left: 100 },
-          width  = 700,
-          height = 700;
+    // Dimensions and margins
+    const margin = { top: 150, right: 200, bottom: 150, left: 100 };
+    const width = 700;
+    const height = 700;
     
     // Create the SVG and group container
     const svg = d3.select("#chart-container")
       .append("svg")
-      .attr("width", width + margin.left + margin.right)
-      .attr("height", height + margin.top + margin.bottom);
+      .attr("width", '100%')
+      .attr("height", '100%')
+      .attr("viewBox", `0 0 ${width + margin.left + margin.right} ${height + margin.top + margin.bottom}`)
+      .attr("preserveAspectRatio", "xMidYMid meet");
     
     const g = svg.append("g")
       .attr("transform", `translate(${margin.left},${margin.top})`);
@@ -239,7 +245,7 @@
                  .style("left", (event.pageX + 10) + "px")
                  .style("top", (event.pageY - 28) + "px");
         })
-        .on("mousemove", function(event, d) {
+        .on("mousemove", function(event) {
           tooltip.style("left", (event.pageX + 10) + "px")
                  .style("top", (event.pageY - 28) + "px");
         })
@@ -261,43 +267,43 @@
       cells.exit().remove();
     }
     
-    // Draw axis labels with updated x-axis transformation and adjusted margins for readability
+    // Draw axis labels, ensuring previous ones are removed
     function drawAxis() {
-      // Clear previous labels
-      g.selectAll(".xLabel").remove();
-      g.selectAll(".yLabel").remove();
-      
-      // Update x-axis labels using new padding and rotation:
-      const labelPadding = 40; // Increased from 15
-      const labelRotation = -45;
-      
-      g.selectAll(".xLabel")
-        .data(xScale.domain())
-        .enter()
-        .append("text")
-        .attr("class", "axis-label xLabel")
-        .attr("x", d => xScale(d) + xScale.bandwidth() / 2)
-        .attr("y", -labelPadding / 2) // Adjust vertical position
-        .style("text-anchor", "end")
-        .style("font-size", "10px") // Slightly smaller font
-        .attr("transform", d => `
-            rotate(${labelRotation},
-            ${xScale(d) + xScale.bandwidth() / 2},
-            ${-labelPadding / 2})
-        `)
-        .text(d => d);
-      
-      // Y-axis labels remain the same
-      g.selectAll(".yLabel")
-        .data(yScale.domain())
-        .enter()
-        .append("text")
-        .attr("class", "axis-label yLabel")
-        .attr("x", -5)
-        .attr("y", d => yScale(d) + yScale.bandwidth() / 2)
-        .attr("text-anchor", "end")
-        .style("dominant-baseline", "middle")
-        .text(d => d);
+        // Clear previous labels
+        g.selectAll(".xLabel").remove();
+        g.selectAll(".yLabel").remove();
+
+        const labelPadding = 15;
+        const labelRotation = -45;
+
+        // X-axis labels
+        g.selectAll(".xLabel")
+            .data(xScale.domain())
+            .enter()
+            .append("text")
+            .attr("class", "axis-label xLabel")
+            .attr("x", d => xScale(d) + xScale.bandwidth() / 2)
+            .attr("y", 0)
+            .style("text-anchor", "end")
+            .style("font-size", "12px")
+            .attr("transform", function(d) {
+                const x = xScale(d) + xScale.bandwidth() / 2;
+                return `translate(0, -${labelPadding + 5}) rotate(${labelRotation}, ${x}, 0)`; // Increased padding
+            })
+            .text(d => d);
+
+        // Y-axis labels
+        g.selectAll(".yLabel")
+            .data(yScale.domain())
+            .enter()
+            .append("text")
+            .attr("class", "axis-label yLabel")
+            .attr("x", -labelPadding)
+            .attr("y", d => yScale(d) + yScale.bandwidth() / 2)
+            .attr("text-anchor", "end")
+            .style("dominant-baseline", "middle")
+            .style("font-size", "12px")
+            .text(d => d);
     }
     
     // Draw the legend with an updated gradient
